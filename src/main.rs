@@ -63,7 +63,9 @@ fn main() {
     if args.is_empty() { usage(); }
     let cmd = args[0].as_str();
     let rest = &args[1..];
+    let state = OmarchyLauncher::state_path();
     let mut m = seed();
+    m.load_state(&state);
     // optionally load a real .desktop dir
     if let Some(dir) = std::env::var_os("XDG_DATA_DIRS").map(|d| Path::new(&d).join("applications"))
         .or_else(|| Some(Path::new("/usr/share/applications").to_path_buf())) {
@@ -115,8 +117,10 @@ fn main() {
         _ => usage(),
     } })();
 
-    if let Err(e) = result {
-        eprintln!("omarchy-launcher: {e}");
-        exit(1);
+    match result {
+        Ok(()) => {
+            if let Err(e) = m.save_state(&state) { eprintln!("omarchy-launcher: warn: save: {e}"); }
+        }
+        Err(e) => { eprintln!("omarchy-launcher: {e}"); exit(1); }
     }
 }

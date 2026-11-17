@@ -12,5 +12,5 @@ depends_on = ["SigmaOS-system"]
 
 [maturity]
 status = "Implemented"
-test_evidence = "cargo test --offline: 7 lib + 1 integration pass; rofi/walker-style launcher (.desktop parser, subsequence fuzzy search, recency+favorites, real /usr/share/applications scan) + working CLI"
+test_evidence = "cargo test --offline: 7 lib + 1 integration pass; rofi/walker-style launcher (.desktop parser, fuzzy search, recents/favorites) with JSON persistence of favorites+recents + working CLI scanning real /usr/share/applications"
 next_milestone = "Wayland layer-shell frontend + spawn exec"

@@ -199,6 +199,35 @@ impl OmarchyLauncher {
         self.apps.values().filter(move |e| e.categories.iter().any(|c| c == cat))
     }
 
+    /// Persist favorites + recents + clock (apps are re-scanned from disk).
+    pub fn save_state(&self, path: &std::path::Path) -> Result<(), String> {
+        let recent: Vec<(String, u64)> = self.recent.iter().map(|r| (r.id.clone(), r.at)).collect();
+        #[derive(serde::Serialize)]
+        struct Disk<'a> { favorites: &'a [String], recent: Vec<(String,u64)>, clock: u64 }
+        let d = Disk { favorites: &self.favorites, recent, clock: self.clock };
+        let j = serde_json::to_string_pretty(&d).map_err(|e| e.to_string())?;
+        if let Some(p) = path.parent() { std::fs::create_dir_all(p).map_err(|e| e.to_string())?; }
+        std::fs::write(path, j).map_err(|e| e.to_string())
+    }
+
+    pub fn load_state(&mut self, path: &std::path::Path) {
+        #[derive(serde::Deserialize)]
+        struct Disk { favorites: Vec<String>, recent: Vec<(String,u64)>, clock: u64 }
+        if let Ok(txt) = std::fs::read_to_string(path) {
+            if let Ok(d) = serde_json::from_str::<Disk>(&txt) {
+                self.favorites = d.favorites;
+                self.recent = d.recent.into_iter().map(|(id, at)| LaunchRecord { id, at }).collect();
+                self.clock = d.clock;
+            }
+        }
+    }
+
+    pub fn state_path() -> std::path::PathBuf {
+        if let Ok(p) = std::env::var("SIGMAOS_LAUNCHER_FILE") { return std::path::PathBuf::from(p); }
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".into());
+        std::path::PathBuf::from(home).join(".local/share/sigmaos/launcher.json")
+    }
+
     pub fn status_line(&self) -> String {
         format!("launcher: {} apps, {} favorites, {} recent", self.apps.len(), self.favorites.len(), self.recent.len())
     }
