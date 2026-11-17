@@ -3,7 +3,7 @@ name = "SigmaOS-omarchy-launcher"
 tier = 2
 stability = "beta"
 language = "rust"
-description = "Application Launcher for SigmaOS inspired by Omarchy Linux"
+description = "Application launcher"
 upstream = []
 
 [contract]
